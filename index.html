@@ -402,7 +402,7 @@
     <div class="container">
         <div class="header">
             <h1>💰 Controle de Despesas - Sala</h1>
-            <p>Rastreie as compras de móveis e produtos. Colega paga R$ 20.000 em despesas</p>
+            <p>Rastreie as compras e pagamentos PIX de Terra. Total: R$ 20.000 em despesas</p>
         </div>
 
         <div class="calculator-card" id="calculatorCard" style="display: none;">
@@ -457,9 +457,9 @@
                         <input type="text" id="description" placeholder="Ex: Sofá, mesa, cadeira, etc" required>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="categoryGroup">
                         <label for="category">Categoria</label>
-                        <select id="category" required>
+                        <select id="category">
                             <option value="">Selecione uma categoria</option>
                             <option value="Móveis">Móveis</option>
                             <option value="Eletrônicos">Eletrônicos</option>
@@ -472,6 +472,17 @@
                         </select>
                     </div>
 
+                    <div class="form-group" id="pixKeyGroup" style="display: none;">
+                        <label for="pixKey">Chave PIX</label>
+                        <select id="pixKey" required>
+                            <option value="">Selecione o tipo de chave</option>
+                            <option value="CPF">CPF</option>
+                            <option value="Email">Email</option>
+                            <option value="Telefone">Telefone</option>
+                            <option value="Chave Aleatória">Chave Aleatória</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label for="amount">Valor (R$)</label>
                         <input type="number" id="amount" placeholder="0.00" step="0.01" min="0" required>
@@ -481,8 +492,17 @@
                         <label for="paidBy">Quem vai pagar/contribuir?</label>
                         <select id="paidBy" required>
                             <option value="">Selecione</option>
-                            <option value="Colega">Colega (conta no repasse)</option>
+                            <option value="Terra">Terra (conta no repasse)</option>
                             <option value="Você">Você</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paymentType">Tipo de Pagamento</label>
+                        <select id="paymentType" required>
+                            <option value="">Selecione</option>
+                            <option value="Compra">Compra de Produto/Móvel</option>
+                            <option value="PIX">Pagamento em PIX</option>
                         </select>
                     </div>
 
@@ -511,9 +531,9 @@
         <div class="card">
             <h2>📌 Como Funciona</h2>
             <div class="split-info">
-                <strong>🟦 Colega paga:</strong> Todas as despesas marcadas como "Colega" contam para o repasse de R$ 20.000 da sala.<br><br>
+                <strong>🟦 Terra paga:</strong> Todas as despesas marcadas como "Terra" contam para o repasse de R$ 20.000 da sala (tanto compras quanto PIX).<br><br>
                 <strong>🟪 Você paga:</strong> Despesas marcadas como "Você" são sua responsabilidade.<br><br>
-                <strong>✅ Objetivo:</strong> Acompanhe até a colega atingir R$ 20.000 em compras para o repasse ficar quitado.
+                <strong>✅ Objetivo:</strong> Acompanhe até Terra atingir R$ 20.000 somando compras de produtos/móveis + pagamentos em PIX para o repasse ficar quitado.
             </div>
         </div>
     </div>
@@ -531,12 +551,14 @@
         function addExpense(e) {
             e.preventDefault();
 
+            const paymentType = document.getElementById('paymentType').value;
             const expense = {
                 id: Date.now(),
                 description: document.getElementById('description').value,
-                category: document.getElementById('category').value,
+                category: paymentType === 'PIX' ? document.getElementById('pixKey').value : document.getElementById('category').value,
                 amount: parseFloat(document.getElementById('amount').value),
                 paidBy: document.getElementById('paidBy').value,
+                paymentType: paymentType,
                 notes: document.getElementById('notes').value,
                 date: new Date().toLocaleDateString('pt-BR')
             };
@@ -571,13 +593,13 @@
             }
 
             list.innerHTML = expenses.map(expense => `
-                <div class="expense-item ${expense.paidBy === 'Colega' ? 'colega' : ''}">
+                <div class="expense-item ${expense.paidBy === 'Terra' ? 'colega' : ''}">
                     <div class="expense-info">
                         <div class="expense-desc">${expense.description}</div>
                         <div class="expense-cat">
-                            <span class="badge ${expense.paidBy === 'Colega' ? 'colega' : ''}">${expense.paidBy === 'Colega' ? '✓ Colega paga' : '💜 Você paga'}</span>
-                            <span style="color: #999; font-size: 12px;">
-                                ${expense.category} • ${expense.date}
+                            <span class="badge ${expense.paidBy === 'Terra' ? 'colega' : ''}">${expense.paidBy === 'Terra' ? '✓ Terra paga' : '💜 Você paga'}</span>
+                            <span style="color: #999; font-size: 12px; margin-left: 8px;">
+                                ${expense.paymentType === 'PIX' ? '🔵 PIX' : '🛒 Compra'} • ${expense.category} • ${expense.date}
                             </span>
                         </div>
                         ${expense.notes ? `<div style="color: #999; font-size: 12px; margin-top: 6px;">📝 ${expense.notes}</div>` : ''}
@@ -592,33 +614,33 @@
 
         function updateSummary() {
             const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-            const colleagueAmount = expenses
-                .filter(e => e.paidBy === 'Colega')
+            const terraAmount = expenses
+                .filter(e => e.paidBy === 'Terra')
                 .reduce((sum, e) => sum + e.amount, 0);
             const yourAmount = expenses
                 .filter(e => e.paidBy === 'Você')
                 .reduce((sum, e) => sum + e.amount, 0);
 
-            const progressPercent = Math.min((colleagueAmount / 20000) * 100, 100);
-            const remaining = Math.max(0, 20000 - colleagueAmount);
+            const progressPercent = Math.min((terraAmount / 20000) * 100, 100);
+            const remaining = Math.max(0, 20000 - terraAmount);
 
             // Atualizar calculadora
             document.getElementById('calculatorCard').style.display = total > 0 ? 'block' : 'none';
-            document.getElementById('calculatorValue').textContent = 'R$ ' + colleagueAmount.toFixed(2).replace('.', ',');
-            document.getElementById('paidValue').textContent = 'R$ ' + colleagueAmount.toFixed(2).replace('.', ',');
+            document.getElementById('calculatorValue').textContent = 'R$ ' + terraAmount.toFixed(2).replace('.', ',');
+            document.getElementById('paidValue').textContent = 'R$ ' + terraAmount.toFixed(2).replace('.', ',');
             document.getElementById('remainingValue').textContent = 'R$ ' + remaining.toFixed(2).replace('.', ',');
             document.getElementById('percentageValue').textContent = Math.round(progressPercent) + '%';
 
             document.getElementById('summaryCard').style.display = total > 0 ? 'block' : 'none';
             document.getElementById('totalAmount').textContent = total.toFixed(2);
-            document.getElementById('colleagueAmount').textContent = colleagueAmount.toFixed(2);
+            document.getElementById('colleagueAmount').textContent = terraAmount.toFixed(2);
             document.getElementById('yourAmount').textContent = yourAmount.toFixed(2);
             document.getElementById('progressFill').style.width = progressPercent + '%';
 
             // Status message
             const statusMsg = document.getElementById('statusMessage');
-            if (colleagueAmount >= 20000) {
-                statusMsg.innerHTML = `<div class="status-message status-complete">✅ Repasse de R$ 20.000 atingido! Colega quitou sua parte.</div>`;
+            if (terraAmount >= 20000) {
+                statusMsg.innerHTML = `<div class="status-message status-complete">✅ Repasse de R$ 20.000 atingido! Terra quitou sua parte.</div>`;
             } else {
                 const remainingFormatted = remaining.toFixed(2);
                 statusMsg.innerHTML = `<div class="status-message status-pending">⏳ Faltam R$ ${remainingFormatted} para completar o repasse</div>`;
@@ -658,6 +680,22 @@
         }
 
         document.getElementById('expenseForm').addEventListener('submit', addExpense);
+
+        // Mostrar/Esconder campos baseado no tipo de pagamento
+        document.getElementById('paymentType').addEventListener('change', function() {
+            const isPixPayment = this.value === 'PIX';
+            document.getElementById('categoryGroup').style.display = isPixPayment ? 'none' : 'block';
+            document.getElementById('pixKeyGroup').style.display = isPixPayment ? 'block' : 'none';
+
+            // Limpar required baseado no tipo
+            if (isPixPayment) {
+                document.getElementById('category').removeAttribute('required');
+                document.getElementById('pixKey').setAttribute('required', 'required');
+            } else {
+                document.getElementById('category').setAttribute('required', 'required');
+                document.getElementById('pixKey').removeAttribute('required');
+            }
+        });
 
         // Carrega dados ao iniciar
         render();
