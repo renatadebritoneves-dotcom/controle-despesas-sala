@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Despesas - Sala</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+            flex: 0.5;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .expense-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .expense-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expense-item.colega {
+            border-left-color: #48bb78;
+        }
+
+        .expense-info {
+            flex: 1;
+        }
+
+        .expense-desc {
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .expense-cat {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .expense-value {
+            text-align: right;
+        }
+
+        .expense-amount {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .expense-item.colega .expense-amount {
+            color: #48bb78;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .total-row {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #48bb78;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .split-info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .expense-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .expense-value {
+                align-self: flex-end;
+                margin-top: 8px;
+                width: 100%;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .badge.colega {
+            background: rgba(72, 187, 120, 0.1);
+            color: #48bb78;
+        }
+
+        .status-message {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .status-complete {
+            background: rgba(72, 187, 120, 0.1);
+            color: #22543d;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(237, 137, 54, 0.1);
+            color: #7c2d12;
+            border: 1px solid rgba(237, 137, 54, 0.3);
+        }
+
+        .calculator-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .calc-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .calc-main-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .calc-label {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-bottom: 24px;
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .calc-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .calc-item-label {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calc-item-value {
+            font-size: 24px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .percentage-display {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Controle de Despesas - Sala</h1>
+            <p>Rastreie as compras de móveis e produtos. Colega paga R$ 20.000 em despesas</p>
+        </div>
+
+        <div class="calculator-card" id="calculatorCard" style="display: none;">
+            <div class="calc-title">🧮 CALCULADORA DE REPASSE</div>
+            <div class="calc-main-value" id="calculatorValue">R$ 0.00</div>
+            <div class="calc-label" id="calculatorLabel">de R$ 20.000</div>
+
+            <div class="calc-grid">
+                <div class="calc-item">
+                    <div class="calc-item-label">Já Pagou</div>
+                    <div class="calc-item-value" id="paidValue">R$ 0</div>
+                </div>
+                <div class="calc-item">
+                    <div class="calc-item-label">Falta Pagar</div>
+                    <div class="calc-item-value" id="remainingValue">R$ 20.000</div>
+                </div>
+            </div>
+
+            <div class="percentage-display">
+                <span id="percentageValue">0%</span> completo
+            </div>
+        </div>
+
+        <div class="summary-card" id="summaryCard" style="display: none;">
+            <div class="summary-row">
+                <div class="summary-label">Total de Compras</div>
+                <div class="summary-value">R$ <span id="totalAmount">0.00</span></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-label">Despesas da Colega</div>
+                <div class="summary-value">R$ <span id="colleagueAmount">0.00</span></div>
+            </div>
+            <div class="total-row">
+                <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 8px;">Limite: R$ 20.000</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="statusMessage"></div>
+            </div>
+            <div class="summary-row" style="margin-top: 16px; margin-bottom: 0; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.2); border-bottom: none;">
+                <div class="summary-label">Suas Despesas</div>
+                <div class="summary-value">R$ <span id="yourAmount">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>➕ Registrar Compra</h2>
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label for="description">O que foi comprado?</label>
+                        <input type="text" id="description" placeholder="Ex: Sofá, mesa, cadeira, etc" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Categoria</label>
+                        <select id="category" required>
+                            <option value="">Selecione uma categoria</option>
+                            <option value="Móveis">Móveis</option>
+                            <option value="Eletrônicos">Eletrônicos</option>
+                            <option value="Decoração">Decoração</option>
+                            <option value="Limpeza">Limpeza</option>
+                            <option value="Cortinas/Persianas">Cortinas/Persianas</option>
+                            <option value="Cozinha">Cozinha</option>
+                            <option value="Reforma">Reforma</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Valor (R$)</label>
+                        <input type="number" id="amount" placeholder="0.00" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paidBy">Quem vai pagar/contribuir?</label>
+                        <select id="paidBy" required>
+                            <option value="">Selecione</option>
+                            <option value="Colega">Colega (conta no repasse)</option>
+                            <option value="Você">Você</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notas (opcional)</label>
+                        <textarea id="notes" placeholder="Detalhes adicionais, loja, etc"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Registrar Compra</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📋 Compras Registradas</h2>
+                <div class="expense-list" id="expenseList">
+                    <div class="empty-state">Nenhuma compra registrada ainda</div>
+                </div>
+                <div class="action-buttons" style="margin-top: 16px;">
+                    <button class="btn-secondary" onclick="exportJSON()">📥 Exportar JSON</button>
+                    <button class="btn-secondary" onclick="exportCSV()">📊 Exportar CSV</button>
+                    <button class="btn-danger" onclick="clearAll()">🗑️ Limpar Tudo</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📌 Como Funciona</h2>
+            <div class="split-info">
+                <strong>🟦 Colega paga:</strong> Todas as despesas marcadas como "Colega" contam para o repasse de R$ 20.000 da sala.<br><br>
+                <strong>🟪 Você paga:</strong> Despesas marcadas como "Você" são sua responsabilidade.<br><br>
+                <strong>✅ Objetivo:</strong> Acompanhe até a colega atingir R$ 20.000 em compras para o repasse ficar quitado.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function addExpense(e) {
+            e.preventDefault();
+
+            const expense = {
+                id: Date.now(),
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                paidBy: document.getElementById('paidBy').value,
+                notes: document.getElementById('notes').value,
+                date: new Date().toLocaleDateString('pt-BR')
+            };
+
+            expenses.push(expense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+
+            document.getElementById('expenseForm').reset();
+            render();
+        }
+
+        function deleteExpense(id) {
+            const index = expenses.findIndex(e => e.id === id);
+            if (index > -1) {
+                expenses.splice(index, 1);
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+                render();
+            }
+        }
+
+        function render() {
+            renderExpenses();
+            updateSummary();
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expenseList');
+
+            if (expenses.length === 0) {
+                list.innerHTML = '<div class="empty-state">Nenhuma compra registrada ainda</div>';
+                return;
+            }
+
+            list.innerHTML = expenses.map(expense => `
+                <div class="expense-item ${expense.paidBy === 'Colega' ? 'colega' : ''}">
+                    <div class="expense-info">
+                        <div class="expense-desc">${expense.description}</div>
+                        <div class="expense-cat">
+                            <span class="badge ${expense.paidBy === 'Colega' ? 'colega' : ''}">${expense.paidBy === 'Colega' ? '✓ Colega paga' : '💜 Você paga'}</span>
+                            <span style="color: #999; font-size: 12px;">
+                                ${expense.category} • ${expense.date}
+                            </span>
+                        </div>
+                        ${expense.notes ? `<div style="color: #999; font-size: 12px; margin-top: 6px;">📝 ${expense.notes}</div>` : ''}
+                    </div>
+                    <div class="expense-value">
+                        <div class="expense-amount">${formatCurrency(expense.amount)}</div>
+                        <button class="btn-danger" style="margin-top: 8px; width: 60px; padding: 6px; font-size: 12px;" onclick="deleteExpense(${expense.id})">Deletar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSummary() {
+            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const colleagueAmount = expenses
+                .filter(e => e.paidBy === 'Colega')
+                .reduce((sum, e) => sum + e.amount, 0);
+            const yourAmount = expenses
+                .filter(e => e.paidBy === 'Você')
+                .reduce((sum, e) => sum + e.amount, 0);
+
+            const progressPercent = Math.min((colleagueAmount / 20000) * 100, 100);
+            const remaining = Math.max(0, 20000 - colleagueAmount);
+
+            // Atualizar calculadora
+            document.getElementById('calculatorCard').style.display = total > 0 ? 'block' : 'none';
+            document.getElementById('calculatorValue').textContent = 'R$ ' + colleagueAmount.toFixed(2).replace('.', ',');
+            document.getElementById('paidValue').textContent = 'R$ ' + colleagueAmount.toFixed(2).replace('.', ',');
+            document.getElementById('remainingValue').textContent = 'R$ ' + remaining.toFixed(2).replace('.', ',');
+            document.getElementById('percentageValue').textContent = Math.round(progressPercent) + '%';
+
+            document.getElementById('summaryCard').style.display = total > 0 ? 'block' : 'none';
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+            document.getElementById('colleagueAmount').textContent = colleagueAmount.toFixed(2);
+            document.getElementById('yourAmount').textContent = yourAmount.toFixed(2);
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+
+            // Status message
+            const statusMsg = document.getElementById('statusMessage');
+            if (colleagueAmount >= 20000) {
+                statusMsg.innerHTML = `<div class="status-message status-complete">✅ Repasse de R$ 20.000 atingido! Colega quitou sua parte.</div>`;
+            } else {
+                const remainingFormatted = remaining.toFixed(2);
+                statusMsg.innerHTML = `<div class="status-message status-pending">⏳ Faltam R$ ${remainingFormatted} para completar o repasse</div>`;
+            }
+        }
+
+        function exportJSON() {
+            const dataStr = JSON.stringify(expenses, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `compras-sala-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function exportCSV() {
+            let csv = 'Data,Produto,Categoria,Valor,Pago Por,Notas\n';
+            expenses.forEach(e => {
+                csv += `${e.date},"${e.description}","${e.category}","${e.amount}","${e.paidBy}","${e.notes || ''}"\n`;
+            });
+
+            const dataBlob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `compras-sala-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function clearAll() {
+            if (confirm('Tem certeza que deseja limpar todas as compras? Esta ação não pode ser desfeita.')) {
+                expenses.length = 0;
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+                render();
+            }
+        }
+
+        document.getElementById('expenseForm').addEventListener('submit', addExpense);
+
+        // Carrega dados ao iniciar
+        render();
+    </script>
+</body>
+</html>
